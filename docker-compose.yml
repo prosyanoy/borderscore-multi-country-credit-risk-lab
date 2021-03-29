@@ -1,0 +1,37 @@
+# docker compose run --rm pipeline          # data -> train -> gate -> monitor
+# docker compose run --rm coldstart         # new-market experiment
+# docker compose up mlflow                  # UI on http://localhost:5000
+# docker compose --profile airflow up airflow   # Airflow standalone on http://localhost:8080
+# No secrets needed; everything is stored in the "bs_data" volume.
+x-app: &app
+  build: .
+  env_file: [{path: .env, required: false}]
+  environment:
+    BORDERSCORE_HOME: /data
+    MLFLOW_TRACKING_URI: sqlite:////data/mlflow.db
+  volumes: [bs_data:/data]
+
+services:
+  pipeline:
+    <<: *app
+    command: python -m borderscore pipeline
+  coldstart:
+    <<: *app
+    command: python -m borderscore coldstart
+  mlflow:
+    <<: *app
+    command: mlflow server --host 0.0.0.0 --port 5000 --backend-store-uri sqlite:////data/mlflow.db --default-artifact-root /data/mlartifacts
+    ports: ["5000:5000"]
+  airflow:
+    <<: *app
+    profiles: ["airflow"]
+    command: bash -c "pip install --no-cache-dir 'apache-airflow>=2.9,<3' && airflow standalone"
+    environment:
+      BORDERSCORE_HOME: /data
+      MLFLOW_TRACKING_URI: sqlite:////data/mlflow.db
+      AIRFLOW__CORE__DAGS_FOLDER: /app/dags
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+    ports: ["8080:8080"]
+
+volumes:
+  bs_data:

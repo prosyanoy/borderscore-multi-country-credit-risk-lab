@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "borderscore"
+version = "0.1.0"
+description = "Multi-country credit-default modeling lab: train, calibrate, monitor, transfer."
+requires-python = ">=3.10"
+dependencies = [
+  "numpy", "pandas", "scikit-learn", "lightgbm", "xgboost", "torch",
+  "mlflow", "matplotlib", "joblib",
+]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[project.scripts]
+borderscore = "borderscore.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+filterwarnings = ["ignore::DeprecationWarning", "ignore::FutureWarning", "ignore::UserWarning"]
